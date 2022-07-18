@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BustlePlayer</string>
+    <string name="track_name">%1s - %2s</string>
+</resources>
