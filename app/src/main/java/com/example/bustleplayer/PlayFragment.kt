@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bustleplayer.databinding.FragmentPlayBinding
+import com.example.bustleplayer.services.PlayerService
 import com.example.bustleplayer.vm.PlayViewModel
 import com.example.bustleplayer.vm.PlayerState
 import com.google.android.exoplayer2.*
@@ -127,11 +128,22 @@ class PlayFragment : Fragment(), Player.Listener {
             itemTouchHelper.attachToRecyclerView(recycleView)
 
             playPauseButton.setOnClickListener {
-                playOrPausePlayer()
+                //playOrPausePlayer()
+                Intent(requireContext(), PlayerService::class.java).also { intent ->
+                    viewModel.playList.value?.first()?.let { track ->
+                    val uri = track.uri.toString()
+                        intent.putExtra("EXTRA_URI", uri)
+                        requireActivity().startService(intent)
+                    }
+
+                }
             }
 
             stopButton.setOnClickListener {
-                stopPlayer()
+                //stopPlayer()
+                Intent(requireContext(), PlayerService::class.java).also {
+                    requireActivity().stopService(it)
+                }
             }
 
             fragmentPlayToolbar.setOnMenuItemClickListener { menuItem ->

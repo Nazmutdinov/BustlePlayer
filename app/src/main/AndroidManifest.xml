@@ -2,12 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.bustleplayer">
-    <uses-permission android:name="Android.permission.WRITE_INTERNAL_STORAGE" />
-    <uses-permission android:name="Android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="Android.permission.ACTION_OPEN_DOCUMENT"/>
-    <uses-permission android:name="Android.permission.MANAGE_DOCUMENTS"/>
-    <uses-permission android:name="Android.permission.FLAG_GRANT_READ_URI_PERMISSION"/>
 
+    <uses-permission android:name="Android.permission.WRITE_INTERNAL_STORAGE" />
+    <uses-permission android:name="Android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="Android.permission.ACTION_OPEN_DOCUMENT" />
+    <uses-permission android:name="Android.permission.MANAGE_DOCUMENTS" />
+    <uses-permission android:name="Android.permission.FLAG_GRANT_READ_URI_PERMISSION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 
 
@@ -31,7 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <service
+            android:name=".services.PlayerService"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 
