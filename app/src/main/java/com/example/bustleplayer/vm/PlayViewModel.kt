@@ -34,6 +34,9 @@ class PlayViewModel @Inject constructor(
 
     var currentPosition: Int = 0
 
+    private var _isMusicServiceBound = false
+    val isMusicServiceBound get() = _isMusicServiceBound
+
     private var _currentPlayerState: PlayerState = PlayerState.Stop()
     val currentPlayerState: PlayerState get() = _currentPlayerState
 
@@ -185,6 +188,14 @@ class PlayViewModel @Inject constructor(
      */
     fun togglePlayStop() {
         _currentPlayerState = PlayerState.Stop()
+    }
+
+    fun bindPlayerService() {
+        _isMusicServiceBound = true
+    }
+
+    fun unbindPlayerService() {
+        _isMusicServiceBound = false
     }
 }
 
