@@ -4,10 +4,12 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/layout/fragment_metadata.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/layout/fragment_play.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/layout/play_fragment.xml" value="0.8822055137844611" />
         <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/layout/track_item.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/layout/track_item_backup.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/menu/metadata_menu.xml" value="0.36666666666666664" />
         <entry key="..\:/Users/admin/AndroidStudioProjects/BustlePlayer/app/src/main/res/menu/play_toolbar.xml" value="0.36666666666666664" />
       </map>
     </option>

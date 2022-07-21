@@ -7,8 +7,22 @@
 
     <fragment
         android:id="@+id/playFragment"
-        android:name="com.example.bustleplayer.PlayFragment"
+        android:name="com.example.bustleplayer.fragments.PlayFragment"
         android:label="PlayFragment"
         tools:layout="@layout/fragment_play"
-        />
+        >
+        <action
+            android:id="@+id/action_playFragment_to_metadataFragment"
+            app:destination="@id/metadataFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/metadataFragment"
+        android:name="com.example.bustleplayer.fragments.MetadataFragment"
+        android:label="MetadataFragment"
+        tools:layout="@layout/fragment_metadata">
+        <argument
+            android:name="uri"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
 </navigation>

@@ -40,38 +40,21 @@ class PlayViewModel @Inject constructor(
     private var _currentPlayerState: PlayerState = PlayerState.Stop()
     val currentPlayerState: PlayerState get() = _currentPlayerState
 
-    fun getAllTracks(context: Context) {
+    fun getAllTracks() {
         viewModelScope.launch(dispatcher) {
             when (val resource = repositoryImpl.getAllTracks()) {
                 is Resource.Success -> {
+                    Log.d("myTag","получил треки ${resource.data}")
                     // преобразуем модель
                     resource.data?.map { trackInfoEntity ->
                         val uri = Uri.parse(trackInfoEntity.uriPath)
                         Track(
                             trackId = trackInfoEntity.trackId,
                             uri = uri,
-                            artist = getMediaData(
-                                context,
-                                uri,
-                                MediaMetadataRetriever.METADATA_KEY_ARTIST
-                            ),
-                            name = getMediaData(
-                                context,
-                                uri,
-                                MediaMetadataRetriever.METADATA_KEY_TITLE
-                            ),
-                            durationMs = getMediaData(
-                                context,
-                                uri,
-                                MediaMetadataRetriever.METADATA_KEY_DURATION
-                            ).toLong(),
-                            duration = utils.getDurationString(
-                                getMediaData(
-                                    context,
-                                    uri,
-                                    MediaMetadataRetriever.METADATA_KEY_DURATION
-                                ).toLong()
-                            ),
+                            artist = trackInfoEntity.artist,
+                            title = trackInfoEntity.title,
+                            durationMs = trackInfoEntity.duration,
+                            duration = utils.getDurationString(trackInfoEntity.duration),
                             isSelected = false
                         )
                     }?.let { items ->
@@ -84,39 +67,61 @@ class PlayViewModel @Inject constructor(
         }
     }
 
+    /*
     private fun getMediaData(context: Context, uri: Uri, metaDataId: Int): String {
         mediaMetadataRetriever.setDataSource(context, uri)
 
         return mediaMetadataRetriever.extractMetadata(metaDataId) ?: ""
     }
 
+     */
+
+    /*
     fun saveTrack(context: Context, uri: Uri) {
         viewModelScope.launch(dispatcher) {
+
+            val artist = getMediaData(
+                context,
+                uri,
+                MediaMetadataRetriever.METADATA_KEY_ARTIST)
+
+            val title = getMediaData(
+                context,
+                uri,
+                MediaMetadataRetriever.METADATA_KEY_TITLE)
+
+            val duration = getMediaData(
+                context,
+                uri,
+                MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+
             // зададим позицию, которую нужно присвоить
-            var newPosition = 0
-            _playList.value?.size?.let { size ->
-                newPosition = size
-            }
+//            var newPosition = 0
+//            _playList.value?.size?.let { size ->
+//                newPosition = size
+//            }
 
             when (val resource =
-                repositoryImpl.addTrack(uri.toString(), newPosition)) {
+                repositoryImpl.addTrack(uri.toString(), artist, title, duration)) {
                 is Resource.Success -> {
                     // загрузим плейлист по новой
-                    getAllTracks(context)
+                    getAllTracks()
                 }
                 else -> _errorMessage.postValue("ошибка ${resource.message}")
             }
         }
     }
 
-    fun deleteTrack(context: Context, position: Int) {
+     */
+
+    fun deleteTrack(position: Int) {
         _playList.value?.let { playlist ->
             val track = playlist[position]
             val trackId = track.trackId
             viewModelScope.launch(dispatcher) {
                 val resource = repositoryImpl.deleteTrack(trackId)
                 if (resource is Resource.Success) {
-                    getAllTracks(context)
+                    getAllTracks()
                 }
             }
         }
@@ -133,10 +138,7 @@ class PlayViewModel @Inject constructor(
                 temp.add(track.copy(isSelected = false))
             }
 
-
             temp[currentPosition].isSelected = false
-
-
             temp[position].isSelected = true
 
             currentPosition = position

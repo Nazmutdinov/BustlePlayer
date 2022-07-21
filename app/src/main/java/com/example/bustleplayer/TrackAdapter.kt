@@ -24,7 +24,7 @@ class TrackAdapter(
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val item = getItem(position)
 
-        val trackName = context.getString(R.string.track_name, item.artist, item.name)
+        val trackName = context.getString(R.string.track_name, item.artist, item.title)
 
         with(holder.binding) {
             trackNameTextView.text = trackName

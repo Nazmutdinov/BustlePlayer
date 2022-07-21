@@ -1,4 +1,4 @@
-package com.example.bustleplayer
+package com.example.bustleplayer.fragments
 
 import android.content.ComponentName
 import android.content.Context
@@ -11,20 +11,22 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.example.bustleplayer.ItemTouchHelperCallback
+import com.example.bustleplayer.R
+import com.example.bustleplayer.TrackAdapter
 import com.example.bustleplayer.databinding.FragmentPlayBinding
 import com.example.bustleplayer.services.PlayerService
 import com.example.bustleplayer.vm.PlayViewModel
 import com.example.bustleplayer.vm.PlayerState
 import com.google.android.exoplayer2.*
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class PlayFragment : Fragment(), Player.Listener {
@@ -46,6 +48,7 @@ class PlayFragment : Fragment(), Player.Listener {
             playerService = binder.getService()
 
             viewModel.bindPlayerService()
+            playerService?.addListener(this@PlayFragment)
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -77,11 +80,12 @@ class PlayFragment : Fragment(), Player.Listener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        bindToMusicService()
 
         setupUI()
 
         setupViewModel()
+
+        if (!viewModel.isMusicServiceBound) bindToMusicService()
     }
 
     /**
@@ -92,7 +96,7 @@ class PlayFragment : Fragment(), Player.Listener {
             recycleView.adapter = adapter
 
             val mDividerItemDecoration = DividerItemDecoration(
-                recycleView.getContext(),
+                recycleView.context,
                 RecyclerView.VERTICAL
             )
             recycleView.addItemDecoration(mDividerItemDecoration)
@@ -121,7 +125,7 @@ class PlayFragment : Fragment(), Player.Listener {
      */
     private fun setupViewModel() {
         // take all tracks from model
-        viewModel.getAllTracks(requireContext())
+        viewModel.getAllTracks()
 
         viewModel.playList.observe(viewLifecycleOwner) { playlist ->
             adapter.submitList(playlist)
@@ -134,7 +138,7 @@ class PlayFragment : Fragment(), Player.Listener {
 
     // Model operations:
     private fun deleteTrack(position: Int) {
-        viewModel.deleteTrack(requireContext(), position)
+        viewModel.deleteTrack(position)
     }
 
     private fun moveTrack(fromPosition: Int, toPosition: Int) {
@@ -150,8 +154,10 @@ class PlayFragment : Fragment(), Player.Listener {
     }
 
     private fun saveSelectedAudioFile(uri: Uri?) {
-        uri?.let { notNull ->
-            viewModel.saveTrack(requireContext(), notNull)
+        uri?.let { notNullUri ->
+            val action = PlayFragmentDirections.actionPlayFragmentToMetadataFragment(notNullUri.toString())
+            findNavController().navigate(action)
+            //viewModel.saveTrack(requireContext(), notNullUri)
         }
     }
 
@@ -170,19 +176,14 @@ class PlayFragment : Fragment(), Player.Listener {
             // let's play music after full stop or restart this fragment
             is PlayerState.Play -> {
                 // prepare playlist for exoplayer
-                createExoplayerPlaylist()
-
-                playerService?.playMusic(viewModel.currentPosition)
-                /*player.prepare()
-                player.seekToDefaultPosition(viewModel.currentPosition)
-                player.play()
-                 */
+                playerService?.let { service ->
+                    createExoplayerPlaylist()
+                    service.playMusic(viewModel.currentPosition)
+                }
             }
             // continue play after pause
-//            is PlayerState.ContinuePlay -> player.play()
             is PlayerState.ContinuePlay -> playerService?.continuePlayMusic()
             else -> playerService?.pauseMusic()
-//            else -> player.pause()
         }
     }
 
@@ -204,9 +205,11 @@ class PlayFragment : Fragment(), Player.Listener {
      * tapped track in adapter
      */
     private fun trackClick(position: Int) {
+        // stop play current track
+        stopPlayer()
+
+        // save new track position
         viewModel.selectTrack(position)
-        // let's stop play and start play from this track
-        viewModel.togglePlayStop()
 
         // set this track as default in exoplayer
         //   player.seekToDefaultPosition(viewModel.currentPosition)
@@ -254,21 +257,22 @@ class PlayFragment : Fragment(), Player.Listener {
     /**
      * event track changed by player self
      */
-    /*
+
     override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
         super.onMediaMetadataChanged(mediaMetadata)
         // only if play, cause when we just create list not playing this event will be trigger too
-        if (player.isPlaying) {
-            viewModel.currentPosition = viewModel.currentPosition.plus(1)
+        playerService?.isPlaying?.let { playing ->
+            if (playing) {
+                viewModel.currentPosition = viewModel.currentPosition.plus(1)
 
-            viewModel.selectTrack(viewModel.currentPosition)
+                viewModel.selectTrack(viewModel.currentPosition)
 
-            binding.recycleView.scrollToPosition(viewModel.currentPosition)
-            player.seekToDefaultPosition(viewModel.currentPosition)
+                binding.recycleView.scrollToPosition(viewModel.currentPosition)
+                //player.seekToDefaultPosition(viewModel.currentPosition)
+            }
         }
-    }
 
-     */
+    }
 
     // Bound Service Methods
     private fun bindToMusicService() {
@@ -292,8 +296,6 @@ class PlayFragment : Fragment(), Player.Listener {
             // stop the audio
             playerService?.stopMusic()
 
-            playerService?.player?.removeListener(this)
-
             // stop the service
             Intent(requireContext(), PlayerService::class.java).also {
                 requireActivity().stopService(it)
@@ -308,7 +310,7 @@ class PlayFragment : Fragment(), Player.Listener {
 
     override fun onDestroy() {
         super.onDestroy()
-      //  unbindMusicService()
+        unbindMusicService()
     }
 
 }

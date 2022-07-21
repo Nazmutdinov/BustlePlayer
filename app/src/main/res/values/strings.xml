@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">BustlePlayer</string>
     <string name="track_name">%1s - %2s</string>
+    <string name="artist_label">artist</string>
+    <string name="title_label">title</string>
 </resources>

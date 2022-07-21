@@ -19,17 +19,27 @@ class LocalDataRepositoryImpl @Inject constructor (
     /**
      * сохранить трек в БД
      */
-    suspend fun addTrack(uri: String, position: Int): Resource<TrackInfoEntity> =
+    suspend fun addTrack(
+        uri: String,
+        artist: String,
+        title: String,
+        duration: Long
+    ): Resource<TrackInfoEntity> =
         withContext(dispatcher) {
             val dao = db.getDao()
 
+           // val trackId = dao.getIdTrack(uri)
 
-            val trackId = dao.getIdTrack(uri)
+            //if (trackId == null) {
+                // такого трека нет в БД
+                // найдем position для него
+                val position = dao.getAllTracks().size
 
-            if (trackId == null) {
-                // такого трека нет в БД, добавляем
                 val trackInfoEntity = TrackInfoEntity(
-                    uriPath = uri.toString(),
+                    uriPath = uri,
+                    artist = artist,
+                    title = title,
+                    duration = duration,
                     position = position
                 )
 
@@ -41,10 +51,10 @@ class LocalDataRepositoryImpl @Inject constructor (
                 }
 
                 return@withContext Resource.Error("ошибка встаки что-то с БД")
-            } else {
-                // такой трек уже есть
-                return@withContext Resource.Error("уже есть")
-            }
+//            } else {
+//                // такой трек уже есть
+//                return@withContext Resource.Error("уже есть")
+//            }
 
         }
 

@@ -8,5 +8,8 @@ import androidx.room.PrimaryKey
 data class TrackInfoEntity(
     @PrimaryKey(autoGenerate = true) val trackId: Int = 0,
     @ColumnInfo(name ="uri_path") val uriPath: String,
+    @ColumnInfo(name ="artist") val artist: String,
+    @ColumnInfo(name ="title") val title: String,
+    @ColumnInfo(name ="duration") val duration: Long,
     val position: Int
 )
