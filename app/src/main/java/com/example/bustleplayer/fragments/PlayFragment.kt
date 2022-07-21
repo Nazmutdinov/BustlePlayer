@@ -205,17 +205,8 @@ class PlayFragment : Fragment(), Player.Listener {
      * tapped track in adapter
      */
     private fun trackClick(position: Int) {
-        // stop play current track
-        stopPlayer()
-
-        // save new track position
+        // save track position as start play position into view model
         viewModel.selectTrack(position)
-
-        // set this track as default in exoplayer
-        //   player.seekToDefaultPosition(viewModel.currentPosition)
-
-        // start playing music from this track
-        playOrPausePlayer()
     }
 
     // player operations

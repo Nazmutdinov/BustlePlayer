@@ -44,7 +44,6 @@ class PlayViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             when (val resource = repositoryImpl.getAllTracks()) {
                 is Resource.Success -> {
-                    Log.d("myTag","получил треки ${resource.data}")
                     // преобразуем модель
                     resource.data?.map { trackInfoEntity ->
                         val uri = Uri.parse(trackInfoEntity.uriPath)

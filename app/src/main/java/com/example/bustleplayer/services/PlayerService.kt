@@ -67,7 +67,6 @@ class PlayerService : Service() {
 
     fun stopMusic() {
         player.stop()
-        player.release()
     }
 
     fun addListener(listener: Player.Listener) {
