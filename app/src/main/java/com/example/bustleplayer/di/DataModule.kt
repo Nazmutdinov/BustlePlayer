@@ -2,7 +2,9 @@ package com.example.bustleplayer.di
 
 import android.content.Context
 import com.example.bustleplayer.data.local.BustleDatabase
+import com.example.bustleplayer.fragments.DialogFactory
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,6 +21,14 @@ class DataModule {
     @Provides
     @Singleton
     fun provideExoPlayer(@ApplicationContext context: Context) = ExoPlayer.Builder(context).build()
+
+    @Provides
+    @Singleton
+    fun provideDialogFactory() = DialogFactory()
+
+    @Provides
+    @Singleton
+    fun provideBottomSheetDialogFragment() = BottomSheetDialogFragment()
 
     @Provides
     @Singleton

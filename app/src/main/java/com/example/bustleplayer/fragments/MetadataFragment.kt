@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MetadataFragment : Fragment() {
     private lateinit var binding: FragmentMetadataBinding
 
+    private var playlistId: Int? = null
     private var uri: Uri? = null
 
     private val viewModel: MetadataViewModel by viewModels()
@@ -24,8 +25,10 @@ class MetadataFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            val ts = it.getString("uri")
-            ts?.let { uriString ->
+            val uriParam = it.getString("uri")
+            playlistId = it.getInt("playlistId")
+
+            uriParam?.let { uriString ->
                 uri = Uri.parse(uriString)
             }
         }
@@ -80,13 +83,11 @@ class MetadataFragment : Fragment() {
      * configuring view model
      */
     private fun setupViewModel() {
-        uri?.let { uri ->
-            viewModel.getMetadataFromUri(requireContext(), uri)
-        }
+        viewModel.getMetadataFromUri(requireContext(), uri)
     }
 
     private fun saveNewTrack(artist: String, title: String) {
-        viewModel.saveTrack(requireContext(), artist, title)
+        viewModel.saveTrack(requireContext(), playlistId, uri, artist, title)
     }
 
     private fun startObserveViewModel() {

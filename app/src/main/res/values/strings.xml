@@ -1,7 +1,20 @@
 <resources>
     <string name="app_name">BustlePlayer</string>
     <string name="track_name">%1s - %2s</string>
+    <!-- string name="track_name">123456789 10 11 12 13 14 - 123456789 10 12 12 13 14 15 16 17 18 19 20</string -->
     <string name="artist_label">artist</string>
     <string name="title_label">title</string>
     <string name="metadata_title">Modify metadata of track</string>
+    <string name="tracklist_label">Tracklist:</string>
+
+    <!-- тексты для диалога -->
+    <string name="add_keyword_dialog_title">Add new playlist</string>
+    <string name="add_keyword_dialog_message">Enter title</string>
+
+    <!-- кнопки для диалога -->
+    <string name="dialog_button_add">Add</string>
+    <string name="dialog_button_OK">OK</string>
+    <string name="dialog_button_cancel">Cancel</string>
+    <string name="dialog_button_no">No</string>
+    <string name="dialog_button_yes">Yes</string>
 </resources>

@@ -31,41 +31,51 @@ class MetadataViewModel @Inject constructor(
     private var _title: String = ""
     val title get() = _title
 
-    private var _uri: Uri? = null
+    //private var _uri: Uri? = null
+
+//    private var _playlistId: Int = -1
 
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
 
-    fun getMetadataFromUri(context: Context, uri: Uri) {
+    fun getMetadataFromUri(context: Context, uri: Uri?) {
         // clear event
         _eventSave.value = false
+        uri?.let {
+            _artist = getMediaData(
+                context,
+                uri,
+                MediaMetadataRetriever.METADATA_KEY_ARTIST
+            )
 
-        _artist = getMediaData(
-            context,
-            uri,
-            MediaMetadataRetriever.METADATA_KEY_ARTIST
-        )
-
-        _title = getMediaData(
-            context,
-            uri,
-            MediaMetadataRetriever.METADATA_KEY_TITLE
-        )
-
-        _uri = uri
+            _title = getMediaData(
+                context,
+                uri,
+                MediaMetadataRetriever.METADATA_KEY_TITLE
+            )
+        }
     }
 
-    fun saveTrack(context: Context, artist: String, title: String) {
+    fun saveTrack(context: Context, playlistId: Int?, uri: Uri?, artist: String, title: String) {
         viewModelScope.launch(dispatcher) {
-            _uri?.let { uri ->
-                val duration = getMediaData(
-                    context,
-                    uri,
-                    MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+            playlistId?.let {
+                uri?.let {
+                    val duration = getMediaData(
+                        context,
+                        uri,
+                        MediaMetadataRetriever.METADATA_KEY_DURATION
+                    ).toLong()
 
-                when (val resource = repositoryImpl.addTrack(uri.toString(), artist, title, duration)) {
-                    is Resource.Success -> _eventSave.postValue(true)
-                    else -> _errorMessage.postValue("ошибка ${resource.message}")
+                    when (val resource = repositoryImpl.addTrack(
+                        playlistId,
+                        uri.toString(),
+                        artist,
+                        title,
+                        duration
+                    )) {
+                        is Resource.Success -> _eventSave.postValue(true)
+                        else -> _errorMessage.postValue("ошибка ${resource.message}")
+                    }
                 }
             }
         }

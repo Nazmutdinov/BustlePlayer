@@ -1,4 +1,4 @@
-package com.example.bustleplayer
+package com.example.bustleplayer.adapters
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -6,12 +6,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.bustleplayer.R
 import com.example.bustleplayer.databinding.TrackItemBinding
 import com.example.bustleplayer.models.Track
 
 class TrackAdapter(
     private val context: Context,
-    private val callbackClickItem: (Int) -> Unit
+    private val callbackPlayItem: (Int) -> Unit,
 ) :
     ListAdapter<Track, TrackAdapter.Holder>(ItemDiffCallback) {
     class Holder(val binding: TrackItemBinding) : RecyclerView.ViewHolder(binding.root)
@@ -31,13 +32,19 @@ class TrackAdapter(
             durationTextView.text = item.duration
 
             val textColorId =
-                if (item.isSelected) context.getColor(R.color.purple_200) else context.getColor(R.color.black)
+                if (item.isSelected) context.getColor(R.color.play) else context.getColor(R.color.black)
             trackNameTextView.setTextColor(textColorId)
             durationTextView.setTextColor(textColorId)
-        }
 
-        holder.itemView.setOnClickListener {
-            callbackClickItem(position)
+            val icon =
+                if (item.isPlaying) context.getDrawable(R.drawable.ic_stop) else context.getDrawable(
+                    R.drawable.ic_play
+                )
+            playStopButton.setImageDrawable(icon)
+
+            playStopButton.setOnClickListener {
+                callbackPlayItem(position)
+            }
         }
     }
 

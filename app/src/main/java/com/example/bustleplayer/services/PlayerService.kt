@@ -1,7 +1,6 @@
 package com.example.bustleplayer.services
 
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
@@ -14,7 +13,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class PlayerService : Service() {
-
     @Inject
     lateinit var player: ExoPlayer
 
@@ -27,31 +25,19 @@ class PlayerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
-
-        /*
-        val data = intent?.getStringExtra("EXTRA_URI")
-        data?.let { uriStr ->
-            val mediaItem = MediaItem.fromUri(uriStr)
-
-            player.setMediaItems(listOf(mediaItem))
-            player.prepare()
-            player.play()
-        }
-         */
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         player.stop()
-        player.release()
     }
 
     fun setMediaItems(items: List<MediaItem>) {
         player.setMediaItems(items)
     }
 
-    fun playMusic( position: Int) {
+    fun playMusic(position: Int = 0) {
         player.prepare()
         player.seekToDefaultPosition(position)
         player.play()
@@ -71,6 +57,10 @@ class PlayerService : Service() {
 
     fun addListener(listener: Player.Listener) {
         player.addListener(listener)
+    }
+
+    fun removeListener(listener: Player.Listener) {
+        player.removeListener(listener)
     }
 
     inner class MusicBinder : Binder() {

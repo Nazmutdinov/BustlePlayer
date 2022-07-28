@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.bustleplayer.data.local.entities.PlayListInfoEntity
+import com.example.bustleplayer.data.local.entities.PlayListTrackCrossRef
 import com.example.bustleplayer.data.local.entities.TrackInfoEntity
 
 @Database(
-    entities = [TrackInfoEntity::class],
+    entities = [TrackInfoEntity::class, PlayListInfoEntity::class, PlayListTrackCrossRef::class],
     version = 1,
     exportSchema = false
 )
@@ -24,7 +26,7 @@ abstract class BustleDatabase: RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context,
                     BustleDatabase::class.java,
-                    "bustle1107"
+                    "bustle2107"
                 )
                     .build()
                 INSTANCE = instance

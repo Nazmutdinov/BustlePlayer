@@ -10,6 +10,5 @@ data class TrackInfoEntity(
     @ColumnInfo(name ="uri_path") val uriPath: String,
     @ColumnInfo(name ="artist") val artist: String,
     @ColumnInfo(name ="title") val title: String,
-    @ColumnInfo(name ="duration") val duration: Long,
-    val position: Int
+    @ColumnInfo(name ="duration") val duration: Long
 )

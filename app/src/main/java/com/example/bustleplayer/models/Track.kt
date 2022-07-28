@@ -9,6 +9,7 @@ data class Track(
     val title: String,
     val durationMs: Long,
     val duration: String,
-    var isSelected: Boolean = false
+    var isSelected: Boolean = false,
+    var isPlaying: Boolean = false
 
 )

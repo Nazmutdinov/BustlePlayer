@@ -1,39 +1,40 @@
 package com.example.bustleplayer
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.IBinder
+import androidx.activity.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.bustleplayer.databinding.ActivityMainBinding
+import com.example.bustleplayer.services.PlayerService
+import com.example.bustleplayer.vm.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+
     private lateinit var navController: NavController
 
-//    var musicService: MusicService? = null
+    var musicService: PlayerService? = null
 
-//    private val viewModel: MainViewModel by viewModels()
+    private val boundServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder: PlayerService.MusicBinder = service as PlayerService.MusicBinder
+            musicService = binder.getService()
+        }
 
-    // 1
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            musicService?.stopMusic()
+            musicService = null
+        }
+    }
 
-//    private val boundServiceConnection = object : ServiceConnection {
-//        // 2
-//        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-//            val binder: MusicService.MusicBinder = service as MusicService.MusicBinder
-//            musicService = binder.getService()
-//            viewModel.isMusicServiceBound = true
-//            musicService?.addListener()
-//        }
-//
-//        // 3
-//        override fun onServiceDisconnected(arg0: ComponentName) {
-//            musicService?.stopMusic()
-//            musicService = null
-//            viewModel.isMusicServiceBound = false
-//        }
-//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,43 +43,44 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupUI()
+
+        setupService()
     }
 
-    override fun onStart() {
-        super.onStart()
-//        if (!viewModel.isMusicServiceBound) bindToMusicService()
+    private fun setupService() {
+        startMusicService()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-//        unbindMusicService()
+        stopMusicService()
     }
 
-    private fun bindToMusicService() {
+    private fun startMusicService() {
         // 1
-//        Intent(this, MusicService::class.java).also {
-//            // 2
-//            bindService(it, boundServiceConnection, Context.BIND_AUTO_CREATE)
-//        }
+        Intent(this, PlayerService::class.java).also { intent ->
+            startService(intent)
+        }
+        Intent(this, PlayerService::class.java).also {
+            // 2
+            bindService(it, boundServiceConnection, Context.BIND_AUTO_CREATE)
+        }
     }
 
-//    private fun unbindMusicService() {
-//        if (viewModel.isMusicServiceBound) {
-//            // stop the audio
-//            // TODO: Call runAction() from MusicService
-//
-//            // disconnect the service and save state
-//            // TODO: Call unbindService()
-//
-//            viewModel.isMusicServiceBound = false
-//            musicService?.stopMusic()
-//            unbindService(boundServiceConnection)
-//        }
-//    }
+    private fun stopMusicService() {
+        // stop the audio
+        // TODO: Call runAction() from MusicService
 
-//    fun playMusic() {
-//        musicService?.playMusic(0)
-//    }
+        // disconnect the service and save state
+        // TODO: Call unbindService()
+
+        // stop the service
+        Intent(this, PlayerService::class.java).also { intent ->
+            stopService(intent)
+        }
+
+        unbindService(boundServiceConnection)
+    }
 
     /**
      * настройка UI элементов окна
@@ -89,7 +91,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupNavigationController() {
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
     }
 }
