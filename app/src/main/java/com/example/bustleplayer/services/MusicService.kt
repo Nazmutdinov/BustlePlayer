@@ -4,9 +4,11 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.bustleplayer.models.Track
 import com.example.bustleplayer.models.TrackExtended
+import com.example.bustleplayer.models.TrackTextData
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.MediaMetadata
@@ -15,18 +17,24 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PlayerService : Service(), Player.Listener {
+class MusicService : Service(), Player.Listener {
+
     @Inject
     lateinit var player: ExoPlayer
 
-    private val binder by lazy { MusicBinder() }
+    private val _trackTextData = MutableLiveData<TrackTextData>()
+    val trackTextData: LiveData<TrackTextData> = _trackTextData
 
-    val isPlaying get() = player.isPlaying
+    private val _eventPlaylistCompleted = MutableLiveData<Boolean>()
+    val eventPlaylistCompleted: LiveData<Boolean> = _eventPlaylistCompleted
+
+    private val binder by lazy { MusicBinder() }
 
     override fun onBind(p0: Intent?): IBinder = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        player.addListener(this)
 
         return START_NOT_STICKY
     }
@@ -36,16 +44,12 @@ class PlayerService : Service(), Player.Listener {
         player.stop()
     }
 
-//    fun setMediaItems(items: List<MediaItem>) {
-//        player.setMediaItems(items)
-//    }
-
-    fun setMediaItems(items: List<Track>, tracklistIsEmptyCallback: () -> Unit) {
+    fun setMediaItems(tracks: List<Track>, tracklistIsEmptyCallback: () -> Unit) {
         // firstly,need to stop all music
         stopMusic()
 
         // try setup playlist tracks
-        items.map { track ->
+        tracks.map { track ->
             val mediaMetadata = MediaMetadata.Builder()
                 .setArtist(track.artist)
                 .setTitle(track.title)
@@ -72,6 +76,7 @@ class PlayerService : Service(), Player.Listener {
     fun setMediaItem(track: TrackExtended) {
         // firstly,need to stop all music
         stopMusic()
+        _eventPlaylistCompleted.value = false
 
         // try setup playlist tracks
         val mediaMetadata = MediaMetadata.Builder()
@@ -89,7 +94,7 @@ class PlayerService : Service(), Player.Listener {
         playMusic()
     }
 
-    fun playMusic(position: Int = 0) {
+    private fun playMusic(position: Int = 0) {
         player.prepare()
         player.seekToDefaultPosition(position)
         player.play()
@@ -107,15 +112,23 @@ class PlayerService : Service(), Player.Listener {
         player.stop()
     }
 
-    fun addListener(listener: Player.Listener) {
-        player.addListener(listener)
+    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+        super.onMediaMetadataChanged(mediaMetadata)
+
+        _trackTextData.value = TrackTextData(
+            artist = mediaMetadata.artist.toString(),
+            title = mediaMetadata.title.toString(),
+            duration = mediaMetadata.description.toString()
+        )
     }
 
-    fun removeListener(listener: Player.Listener) {
-        player.removeListener(listener)
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        super.onPlaybackStateChanged(playbackState)
+
+        _eventPlaylistCompleted.value = playbackState == ExoPlayer.STATE_ENDED
     }
 
     inner class MusicBinder : Binder() {
-        fun getService(): PlayerService = this@PlayerService
+        fun getService(): MusicService = this@MusicService
     }
 }

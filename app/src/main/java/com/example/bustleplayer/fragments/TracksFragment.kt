@@ -18,7 +18,7 @@ import com.example.bustleplayer.R
 import com.example.bustleplayer.activities.MainActivity
 import com.example.bustleplayer.adapters.TrackAdapter
 import com.example.bustleplayer.databinding.FragmentTracksBinding
-import com.example.bustleplayer.services.PlayerService
+import com.example.bustleplayer.services.MusicService
 import com.example.bustleplayer.vm.TracksViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -45,7 +45,7 @@ class TracksFragment : Fragment() {
     private var playlistId: Int? = null
     private var title: String? = null
 
-    private val musicService: PlayerService? by lazy {
+    private val musicService: MusicService? by lazy {
         val myActivity = requireActivity() as MainActivity
         myActivity.musicService
     }

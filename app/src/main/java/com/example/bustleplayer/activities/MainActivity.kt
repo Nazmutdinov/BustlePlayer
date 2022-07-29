@@ -11,7 +11,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.bustleplayer.R
 import com.example.bustleplayer.databinding.ActivityMainBinding
-import com.example.bustleplayer.services.PlayerService
+import com.example.bustleplayer.services.MusicService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -20,11 +20,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var navController: NavController
 
-    var musicService: PlayerService? = null
+    var musicService: MusicService? = null
 
     private val boundServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            val binder: PlayerService.MusicBinder = service as PlayerService.MusicBinder
+            val binder: MusicService.MusicBinder = service as MusicService.MusicBinder
             musicService = binder.getService()
         }
 
@@ -57,10 +57,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun startMusicService() {
         // 1
-        Intent(this, PlayerService::class.java).also { intent ->
+        Intent(this, MusicService::class.java).also { intent ->
             startService(intent)
         }
-        Intent(this, PlayerService::class.java).also {
+        Intent(this, MusicService::class.java).also {
             // 2
             bindService(it, boundServiceConnection, Context.BIND_AUTO_CREATE)
         }
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         // TODO: Call unbindService()
 
         // stop the service
-        Intent(this, PlayerService::class.java).also { intent ->
+        Intent(this, MusicService::class.java).also { intent ->
             stopService(intent)
         }
 

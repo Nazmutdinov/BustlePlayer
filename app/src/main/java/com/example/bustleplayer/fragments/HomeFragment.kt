@@ -11,18 +11,16 @@ import androidx.navigation.fragment.findNavController
 import com.example.bustleplayer.activities.MainActivity
 import com.example.bustleplayer.adapters.PlaylistAdapter
 import com.example.bustleplayer.databinding.FragmentHomeBinding
-import com.example.bustleplayer.services.PlayerService
+import com.example.bustleplayer.models.TrackTextData
+import com.example.bustleplayer.services.MusicService
 import com.example.bustleplayer.vm.HomeViewModel
 import com.example.bustleplayer.vm.PlayerState
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaMetadata
-import com.google.android.exoplayer2.Player
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class HomeFragment : Fragment(), Player.Listener {
+class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
 
     private val adapter = PlaylistAdapter(::itemClick, ::moreItemClick)
@@ -32,9 +30,9 @@ class HomeFragment : Fragment(), Player.Listener {
     @Inject
     lateinit var dialogFactory: DialogFactory
 
-    private val musicService: PlayerService? by lazy {
+    private val musicService: MusicService? get() {
         val myActivity = requireActivity() as MainActivity
-        myActivity.musicService
+        return myActivity.musicService
     }
 
     private val viewModel: HomeViewModel by viewModels()
@@ -60,6 +58,8 @@ class HomeFragment : Fragment(), Player.Listener {
         setupUI()
 
         setupViewModel()
+
+
     }
 
     /**
@@ -139,14 +139,6 @@ class HomeFragment : Fragment(), Player.Listener {
 
         // event getting tracks
         viewModel.tracks.observe(viewLifecycleOwner) { tracks ->
-            Log.d("myTag", "items = $tracks")
-            // stop music service
-            //musicService?.stopMusic()
-
-            // add this fragment as listener for event actions
-            musicService?.addListener(this@HomeFragment)
-
-            // send tracks to music service to start play them
             musicService?.setMediaItems(tracks, ::playlistError)
         }
 
@@ -160,6 +152,16 @@ class HomeFragment : Fragment(), Player.Listener {
         }
     }
 
+    private fun setupMusicService() {
+        musicService?.trackTextData?.observe(viewLifecycleOwner) { trackTextData ->
+            updateTrackTextData(trackTextData)
+        }
+
+        musicService?.eventPlaylistCompleted?.observe(viewLifecycleOwner) { isCompleted ->
+            if (isCompleted) viewModel.toggleStop()
+        }
+    }
+
     /**
      * changes player state from VM
      * set UI labels, buttons, commands to music service
@@ -169,11 +171,21 @@ class HomeFragment : Fragment(), Player.Listener {
             is PlayerState.Play -> viewModel.getTracks(viewModel.playlistId)
             is PlayerState.Pause -> musicService?.pauseMusic()
             is PlayerState.ContinuePlay -> musicService?.continuePlayMusic()
-            is PlayerState.Stop -> {
-                musicService?.stopMusic()
-                musicService?.removeListener(this@HomeFragment)
-            }
+            is PlayerState.Stop -> musicService?.stopMusic()
             else -> Unit
+        }
+
+
+    }
+
+    /**
+     * set UI labels for current track
+     */
+    private fun updateTrackTextData(trackTextData: TrackTextData?) {
+        trackTextData?.let { trackTextDataNotNull->
+            binding.includeBottomSheet.trackTextView.text =
+                "${trackTextDataNotNull.artist} - ${trackTextDataNotNull.title}"
+            binding.includeBottomSheet.durationTextView.text = trackTextDataNotNull.duration
         }
     }
 
@@ -221,7 +233,6 @@ class HomeFragment : Fragment(), Player.Listener {
     private fun playlistError() {
         // if tracklist is empty
         viewModel.toggleStop()
-        //changeButtonIcon(viewModel.currentPlayerState)
 
         // clear information of current track
         clearCurrentTrackLabels()
@@ -243,6 +254,7 @@ class HomeFragment : Fragment(), Player.Listener {
      */
     private fun playPauseTapped() {
         viewModel.togglePlayPause()
+        setupMusicService()
     }
 
     /**
@@ -250,26 +262,5 @@ class HomeFragment : Fragment(), Player.Listener {
      */
     private fun stopTapped() {
         viewModel.toggleStop()
-    }
-
-    // music service lister methods
-    /**
-     * service play next track, refresh UI texts
-     */
-    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-        super.onMediaMetadataChanged(mediaMetadata)
-
-        binding.includeBottomSheet.trackTextView.text =
-            "${mediaMetadata.artist} - ${mediaMetadata.title}"
-        binding.includeBottomSheet.durationTextView.text = mediaMetadata.description
-    }
-
-    /**
-     * service end play all tracks, refresh UI buttons
-     */
-    override fun onPlaybackStateChanged(playbackState: Int) {
-        super.onPlaybackStateChanged(playbackState)
-
-        if (playbackState == ExoPlayer.STATE_ENDED) viewModel.toggleStop()
     }
 }
