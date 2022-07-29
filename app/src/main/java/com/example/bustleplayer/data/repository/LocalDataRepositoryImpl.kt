@@ -1,12 +1,17 @@
 package com.example.bustleplayer.data.repository
 
+import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.Log
+import com.example.bustleplayer.R
 import com.example.bustleplayer.data.local.BustleDatabase
 import com.example.bustleplayer.data.local.entities.PlayListInfoEntity
 import com.example.bustleplayer.data.local.entities.PlayListTrackCrossRef
 import com.example.bustleplayer.data.local.entities.TrackInfoEntity
 import com.example.bustleplayer.data.local.relations.PlaylistWithTracks
 import com.example.bustleplayer.di.DispatcherDb
+import com.example.bustleplayer.vm.PlayerState
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -162,4 +167,31 @@ class LocalDataRepositoryImpl @Inject constructor(
 
             return@withContext Resource.Success(true)
         }
+
+    /**
+     * get color text for track which is playing or not
+     */
+    fun getTextColorFromTrackState(isTrackNowPlaying: Boolean = false): Int =
+        if (isTrackNowPlaying) R.color.play else R.color.black
+
+
+    /**
+     * get icon for track which is playing or not
+     */
+    fun getImageIdFromTrackState(isTrackNowPlaying: Boolean = false): Int =
+        if (isTrackNowPlaying) R.drawable.ic_stop else R.drawable.ic_play
+
+    /**
+     * get icon for play button play OR pause
+     */
+    fun getPlayButtonImageId(isTrackNowPlaying: Boolean = false): Int =
+        if (isTrackNowPlaying) R.drawable.ic_pause else R.drawable.ic_play
+
+    /**
+     * get icon for expand \ collapsed bottom sheet
+     */
+//    fun getImageIdButtonBottomSheet(isBottomSheetCollapsed: Boolean = true): Int =
+//        if (isBottomSheetCollapsed) R.drawable.ic_expand_less else R.drawable.ic_expand_more
+
+
 }

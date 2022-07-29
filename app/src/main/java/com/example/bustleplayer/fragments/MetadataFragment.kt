@@ -52,7 +52,7 @@ class MetadataFragment : Fragment() {
     }
 
     /**
-     * setup toolbar, adapter, buttons, exoplayer listener
+     * setup toolbar, adapter, buttons
      */
     private fun setupUI() {
         with(binding) {
@@ -76,7 +76,6 @@ class MetadataFragment : Fragment() {
                 }
             }
         }
-
     }
 
     /**

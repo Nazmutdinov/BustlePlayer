@@ -50,6 +50,5 @@ class PlaylistAdapter(
 
         override fun areContentsTheSame(oldItem: Playlist, newItem: Playlist): Boolean =
             oldItem == newItem
-
     }
 }

@@ -1,4 +1,4 @@
-package com.example.bustleplayer
+package com.example.bustleplayer.activities
 
 import android.content.ComponentName
 import android.content.Context
@@ -7,12 +7,11 @@ import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
-import androidx.activity.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.example.bustleplayer.R
 import com.example.bustleplayer.databinding.ActivityMainBinding
 import com.example.bustleplayer.services.PlayerService
-import com.example.bustleplayer.vm.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

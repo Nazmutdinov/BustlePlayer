@@ -5,12 +5,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bustleplayer.R
 import com.example.bustleplayer.Utils
 import com.example.bustleplayer.data.repository.LocalDataRepositoryImpl
 import com.example.bustleplayer.data.repository.Resource
 import com.example.bustleplayer.di.DispatcherVM
 import com.example.bustleplayer.models.Playlist
 import com.example.bustleplayer.models.Track
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -31,12 +33,19 @@ class HomeViewModel @Inject constructor(
     private val _tracks = MutableLiveData<List<Track>>()
     val tracks: LiveData<List<Track>> = _tracks
 
-    private var _currentPlayerState: PlayerState = PlayerState.Stop()
-    val currentPlayerState: PlayerState get() = _currentPlayerState
+    private val _currentPlayerState = MutableLiveData<PlayerState>()
+    val currentPlayerState: LiveData<PlayerState> = _currentPlayerState
 
+    private val _playButtonImageResourceId = MutableLiveData<Int>()
+    val playButtonImageResourceId: LiveData<Int> = _playButtonImageResourceId
 
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
+
+    init {
+        _currentPlayerState.value = PlayerState.Initial()
+        _playButtonImageResourceId.value = repositoryImpl.getPlayButtonImageId()
+    }
 
     fun getPlaylists() {
         viewModelScope.launch(dispatcher) {
@@ -105,9 +114,7 @@ class HomeViewModel @Inject constructor(
                                 artist = trackInfoEntity.artist,
                                 title = trackInfoEntity.title,
                                 durationMs = trackInfoEntity.duration,
-                                duration = utils.getDurationString(trackInfoEntity.duration),
-                                isSelected = false,
-                                isPlaying = false
+                                duration = utils.getDurationString(trackInfoEntity.duration)
                             )
                         }?.let { items ->
 
@@ -133,19 +140,43 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * change player state
+     * change player state b/t play/pause
      */
     fun togglePlayPause() {
-        _currentPlayerState = when (_currentPlayerState) {
-            is PlayerState.Pause -> PlayerState.ContinuePlay()
-            is PlayerState.Play -> PlayerState.Pause()
-            is PlayerState.ContinuePlay -> PlayerState.Pause()
-            else -> PlayerState.Play()
+        currentPlayerState.value?.let { playerState ->
+            when(playerState) {
+                is PlayerState.Pause -> {
+                    _currentPlayerState.value = PlayerState.ContinuePlay()
+                    _playButtonImageResourceId.value = repositoryImpl.getPlayButtonImageId(true)
+                }
+                is PlayerState.Play -> {
+                    _currentPlayerState.value = PlayerState.Pause()
+                    _playButtonImageResourceId.value = repositoryImpl.getPlayButtonImageId()
+                }
+                is PlayerState.ContinuePlay -> {
+                    _currentPlayerState.value = PlayerState.Pause()
+                    _playButtonImageResourceId.value = repositoryImpl.getPlayButtonImageId()
+                }
+                else -> {
+                    _currentPlayerState.value = PlayerState.Play()
+                    _playButtonImageResourceId.value = repositoryImpl.getPlayButtonImageId(true)
+                }
+            }
         }
-
     }
 
+    /**
+     * set player state to stop
+     */
     fun toggleStop() {
-        _currentPlayerState = PlayerState.Stop()
+        _currentPlayerState.value = PlayerState.Stop()
+        _playButtonImageResourceId.value = repositoryImpl.getPlayButtonImageId()
     }
+
+    /**
+     * expand bottom sheet player manager
+     */
+    fun getImageIdButtonBottomSheet(newState: Int): Int =
+        if (newState == BottomSheetBehavior.STATE_EXPANDED) R.drawable.ic_expand_more
+        else R.drawable.ic_expand_less
 }

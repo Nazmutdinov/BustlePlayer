@@ -5,14 +5,17 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import com.example.bustleplayer.models.Track
+import com.example.bustleplayer.models.TrackExtended
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.MediaMetadata
 import com.google.android.exoplayer2.Player
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PlayerService : Service() {
+class PlayerService : Service(), Player.Listener {
     @Inject
     lateinit var player: ExoPlayer
 
@@ -33,8 +36,57 @@ class PlayerService : Service() {
         player.stop()
     }
 
-    fun setMediaItems(items: List<MediaItem>) {
-        player.setMediaItems(items)
+//    fun setMediaItems(items: List<MediaItem>) {
+//        player.setMediaItems(items)
+//    }
+
+    fun setMediaItems(items: List<Track>, tracklistIsEmptyCallback: () -> Unit) {
+        // firstly,need to stop all music
+        stopMusic()
+
+        // try setup playlist tracks
+        items.map { track ->
+            val mediaMetadata = MediaMetadata.Builder()
+                .setArtist(track.artist)
+                .setTitle(track.title)
+                .setDescription(track.duration)
+                .build()
+
+            val mediaItem = MediaItem.Builder()
+                .setUri(track.uri)
+                .setMediaMetadata(mediaMetadata)
+                .build()
+
+            mediaItem
+        }.let { mediaItems ->
+            // установка Media Items в player сервисе
+            if (mediaItems.isNotEmpty()) {
+                player.setMediaItems(mediaItems)
+                playMusic()
+            } else {
+                tracklistIsEmptyCallback()
+            }
+        }
+    }
+
+    fun setMediaItem(track: TrackExtended) {
+        // firstly,need to stop all music
+        stopMusic()
+
+        // try setup playlist tracks
+        val mediaMetadata = MediaMetadata.Builder()
+            .setArtist(track.artist)
+            .setTitle(track.title)
+            .setDescription(track.duration)
+            .build()
+
+        val mediaItem = MediaItem.Builder()
+            .setUri(track.uri)
+            .setMediaMetadata(mediaMetadata)
+            .build()
+
+        player.setMediaItem(mediaItem)
+        playMusic()
     }
 
     fun playMusic(position: Int = 0) {

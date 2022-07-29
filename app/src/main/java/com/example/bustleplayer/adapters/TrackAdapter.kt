@@ -8,13 +8,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bustleplayer.R
 import com.example.bustleplayer.databinding.TrackItemBinding
-import com.example.bustleplayer.models.Track
+import com.example.bustleplayer.models.TrackExtended
 
 class TrackAdapter(
     private val context: Context,
     private val callbackPlayItem: (Int) -> Unit,
 ) :
-    ListAdapter<Track, TrackAdapter.Holder>(ItemDiffCallback) {
+    ListAdapter<TrackExtended, TrackAdapter.Holder>(ItemDiffCallback) {
     class Holder(val binding: TrackItemBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -31,16 +31,22 @@ class TrackAdapter(
             trackNameTextView.text = trackName
             durationTextView.text = item.duration
 
+            /*
             val textColorId =
                 if (item.isSelected) context.getColor(R.color.play) else context.getColor(R.color.black)
-            trackNameTextView.setTextColor(textColorId)
-            durationTextView.setTextColor(textColorId)
+
 
             val icon =
                 if (item.isPlaying) context.getDrawable(R.drawable.ic_stop) else context.getDrawable(
                     R.drawable.ic_play
                 )
-            playStopButton.setImageDrawable(icon)
+
+             */
+
+            trackNameTextView.setTextColor(context.getColor(item.textColor))
+            durationTextView.setTextColor(context.getColor(item.textColor))
+
+            playStopButton.setImageDrawable(context.getDrawable(item.imagePlayId))
 
             playStopButton.setOnClickListener {
                 callbackPlayItem(position)
@@ -48,12 +54,12 @@ class TrackAdapter(
         }
     }
 
-    object ItemDiffCallback : DiffUtil.ItemCallback<Track>() {
-        override fun areItemsTheSame(oldItem: Track, newItem: Track): Boolean =
+    object ItemDiffCallback : DiffUtil.ItemCallback<TrackExtended>() {
+        override fun areItemsTheSame(oldItem: TrackExtended, newItem: TrackExtended): Boolean =
             oldItem == newItem
 
 
-        override fun areContentsTheSame(oldItem: Track, newItem: Track): Boolean =
+        override fun areContentsTheSame(oldItem: TrackExtended, newItem: TrackExtended): Boolean =
             oldItem == newItem
     }
 }

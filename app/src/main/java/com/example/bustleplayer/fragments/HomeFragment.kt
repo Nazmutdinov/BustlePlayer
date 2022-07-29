@@ -8,16 +8,13 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.fragment.app.*
 import androidx.navigation.fragment.findNavController
-import com.example.bustleplayer.MainActivity
-import com.example.bustleplayer.R
+import com.example.bustleplayer.activities.MainActivity
 import com.example.bustleplayer.adapters.PlaylistAdapter
 import com.example.bustleplayer.databinding.FragmentHomeBinding
-import com.example.bustleplayer.models.Track
 import com.example.bustleplayer.services.PlayerService
 import com.example.bustleplayer.vm.HomeViewModel
 import com.example.bustleplayer.vm.PlayerState
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.MediaMetadata
 import com.google.android.exoplayer2.Player
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -47,7 +44,6 @@ class HomeFragment : Fragment(), Player.Listener {
 
         setupResultListener()
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -94,12 +90,9 @@ class HomeFragment : Fragment(), Player.Listener {
 
             val bottomSheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
-                    val imageId =
-                        if (newState == BottomSheetBehavior.STATE_EXPANDED) R.drawable.ic_expand_more
-                        else R.drawable.ic_expand_less
 
                     binding.includeBottomSheet.imageViewShowBottomSheet.setImageDrawable(
-                        context?.getDrawable(imageId)
+                        context?.getDrawable(viewModel.getImageIdButtonBottomSheet(newState))
                     )
                 }
 
@@ -139,8 +132,48 @@ class HomeFragment : Fragment(), Player.Listener {
             adapter.submitList(items)
         }
 
+        // слушаем получение состояний плеера
+        viewModel.currentPlayerState.observe(viewLifecycleOwner) { state ->
+            actionToChangeState(state)
+        }
+
+        // event getting tracks
+        viewModel.tracks.observe(viewLifecycleOwner) { tracks ->
+            Log.d("myTag", "items = $tracks")
+            // stop music service
+            //musicService?.stopMusic()
+
+            // add this fragment as listener for event actions
+            musicService?.addListener(this@HomeFragment)
+
+            // send tracks to music service to start play them
+            musicService?.setMediaItems(tracks, ::playlistError)
+        }
+
+        // event for play button icon
+        viewModel.playButtonImageResourceId.observe(viewLifecycleOwner) { imageId ->
+            binding.includeBottomSheet.buttonPlayPause.setImageResource(imageId)
+        }
+
         viewModel.errorMessage.observe(viewLifecycleOwner) {
             Log.d("myTag", it)
+        }
+    }
+
+    /**
+     * changes player state from VM
+     * set UI labels, buttons, commands to music service
+     */
+    private fun actionToChangeState(state: PlayerState) {
+        when (state) {
+            is PlayerState.Play -> viewModel.getTracks(viewModel.playlistId)
+            is PlayerState.Pause -> musicService?.pauseMusic()
+            is PlayerState.ContinuePlay -> musicService?.continuePlayMusic()
+            is PlayerState.Stop -> {
+                musicService?.stopMusic()
+                musicService?.removeListener(this@HomeFragment)
+            }
+            else -> Unit
         }
     }
 
@@ -182,36 +215,25 @@ class HomeFragment : Fragment(), Player.Listener {
         viewModel.deletePlaylist(playlistId)
     }
 
+    /**
+     * playlist is absent, it's error
+     */
+    private fun playlistError() {
+        // if tracklist is empty
+        viewModel.toggleStop()
+        //changeButtonIcon(viewModel.currentPlayerState)
 
+        // clear information of current track
+        clearCurrentTrackLabels()
+    }
 
     /**
-     * prepare media items for music service
+     * clear UI labels of current track
      */
-    private fun setupAndPlayMusic(items: List<Track>) {
-        items.map { track ->
-            val mediaMetadata = MediaMetadata.Builder()
-                .setArtist(track.artist)
-                .setTitle(track.title)
-                .setDescription(track.duration)
-                .build()
-
-            val mediaItem = MediaItem.Builder()
-                .setUri(track.uri)
-                .setMediaMetadata(mediaMetadata)
-                .build()
-
-            mediaItem
-        }.let { mediaItems ->
-            // установка Media Items в player сервисе
-            if (mediaItems.isNotEmpty()) {
-                musicService?.setMediaItems(mediaItems)
-                musicService?.playMusic()
-            } else {
-                viewModel.toggleStop()
-                changeButtonIcon(viewModel.currentPlayerState)
-                binding.includeBottomSheet.trackTextView.text = ""
-                binding.includeBottomSheet.durationTextView.text = ""
-            }
+    private fun clearCurrentTrackLabels() {
+        with(binding.includeBottomSheet) {
+            trackTextView.text = ""
+            durationTextView.text = ""
         }
     }
 
@@ -220,69 +242,14 @@ class HomeFragment : Fragment(), Player.Listener {
      * play/pause button tapped
      */
     private fun playPauseTapped() {
-        // save state in vm
         viewModel.togglePlayPause()
-
-        // change button icon
-        changeButtonIcon(viewModel.currentPlayerState)
-
-        // TODO move all logic in VM
-        if (viewModel.currentPlayerState is PlayerState.Play) {
-            // stop music service
-            musicService?.stopMusic()
-
-            // add this fragment as listener for event actions
-            musicService?.addListener(this@HomeFragment)
-
-            // get all tracks for this playlist
-            // TODO remove viewModel.playlistId parameter
-            viewModel.getTracks(viewModel.playlistId)
-
-            // event getting tracks
-            viewModel.tracks.observe(viewLifecycleOwner) { items ->
-                setupAndPlayMusic(items)
-            }
-        }
-
-        if (viewModel.currentPlayerState is PlayerState.Pause) {
-            musicService?.pauseMusic()
-        }
-
-        if (viewModel.currentPlayerState is PlayerState.ContinuePlay) {
-            musicService?.continuePlayMusic()
-        }
     }
 
     /**
      * button Stop tapped
      */
     private fun stopTapped() {
-        // save state in vm
         viewModel.toggleStop()
-
-        // change button icon
-        changeButtonIcon(viewModel.currentPlayerState)
-
-        // stop music service
-        musicService?.stopMusic()
-
-        // add this fragment as listener for event actions either we will have too many listeners
-        musicService?.removeListener(this@HomeFragment)
-    }
-
-    /**
-     * TODO move logic in vm
-     * change button icon corresponds to model player state
-     */
-    private fun changeButtonIcon(state: PlayerState) {
-        val imageResource =
-            when (state) {
-                is PlayerState.Play -> R.drawable.ic_pause
-                is PlayerState.ContinuePlay -> R.drawable.ic_pause
-                else -> R.drawable.ic_play
-            }
-
-        binding.includeBottomSheet.buttonPlayPause.setImageResource(imageResource)
     }
 
     // music service lister methods
@@ -303,9 +270,6 @@ class HomeFragment : Fragment(), Player.Listener {
     override fun onPlaybackStateChanged(playbackState: Int) {
         super.onPlaybackStateChanged(playbackState)
 
-        if (playbackState == ExoPlayer.STATE_ENDED) {
-            viewModel.toggleStop()
-            changeButtonIcon(viewModel.currentPlayerState)
-        }
+        if (playbackState == ExoPlayer.STATE_ENDED) viewModel.toggleStop()
     }
 }

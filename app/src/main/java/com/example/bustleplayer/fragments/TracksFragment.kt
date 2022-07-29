@@ -15,19 +15,20 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.bustleplayer.ItemTouchHelperCallback
 import com.example.bustleplayer.R
+import com.example.bustleplayer.activities.MainActivity
 import com.example.bustleplayer.adapters.TrackAdapter
 import com.example.bustleplayer.databinding.FragmentTracksBinding
+import com.example.bustleplayer.services.PlayerService
 import com.example.bustleplayer.vm.TracksViewModel
-import com.google.android.exoplayer2.*
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class TracksFragment : Fragment() {
     private lateinit var binding: FragmentTracksBinding
 
     private val adapter: TrackAdapter by lazy {
-        TrackAdapter(requireContext(), ::trackClick)
+        TrackAdapter(requireContext(), ::trackPlayClick)
     }
 
     private val itemTouchHelperCallback = ItemTouchHelperCallback(
@@ -44,8 +45,10 @@ class TracksFragment : Fragment() {
     private var playlistId: Int? = null
     private var title: String? = null
 
-    @Inject
-    lateinit var player: ExoPlayer
+    private val musicService: PlayerService? by lazy {
+        val myActivity = requireActivity() as MainActivity
+        myActivity.musicService
+    }
 
     private val viewModel: TracksViewModel by viewModels()
 
@@ -76,7 +79,7 @@ class TracksFragment : Fragment() {
     }
 
     /**
-     * setup toolbar, adapter, buttons, exoplayer listener
+     * setup toolbar, adapter, buttons
      */
     private fun setupUI() {
         with(binding) {
@@ -112,13 +115,12 @@ class TracksFragment : Fragment() {
             adapter.submitList(playlist)
         }
 
-        viewModel.mediaItem.observe(viewLifecycleOwner) { mediaItem ->
-            if (mediaItem == null) player.stop()
-            else {
-                player.prepare()
-                player.setMediaItem(mediaItem)
-                player.play()
+        viewModel.currentTrack.observe(viewLifecycleOwner) { trackExtended ->
+            trackExtended?.let {
+                musicService?.setMediaItem(trackExtended)
             }
+
+            if (trackExtended == null) musicService?.stopMusic()
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) {
@@ -155,122 +157,11 @@ class TracksFragment : Fragment() {
         }
     }
 
-    // UI operations:
     /**
-     * command to exoplayer play or pause music after button tapped
+     * play button tapped on track in adapter
      */
-    /*
-    private fun playOrStopMusic() {
-        // toggle model player state
-        viewModel.togglePlayPause()
-
-        // change button icon
-        changeButtonIcon(viewModel.currentPlayerState)
-
-        when (viewModel.currentPlayerState) {
-            // let's play music after full stop or restart this fragment
-            is PlayerState.Play -> {
-                // prepare playlist for exoplayer
-                player.stop()
-                player.prepare()
-                player.play()
-            }
-            else -> player.stop()
-        }
-    }
-
-    /**
-     * change button icon corresponds to model player state
-     */
-    private fun changeButtonIcon(state: PlayerState) {
-//        val imageResource =
-//            when (state) {
-//                is PlayerState.Play -> R.drawable.ic_pause
-//                is PlayerState.ContinuePlay -> R.drawable.ic_pause
-//                else -> R.drawable.ic_play
-//            }
-
-
-        //binding.pla.setImageResource(imageResource)
-    }
-
-     */
-
-    /**
-     * tapped track in adapter
-     */
-    private fun trackClick(position: Int) {
+    private fun trackPlayClick(position: Int) {
         // save track position as start play position into view model
-        viewModel.selectTrack(position)
+        viewModel.trackPlayTapped(position)
     }
-
-    // player operations
-    /**
-     * create playlist in exoplayer
-     */
-    /*
-    private fun createExoplayerPlaylist() {
-        viewModel.tracks.value?.map { track ->
-            MediaItem.fromUri(track.uri)
-
-        }?.let { mediaItems ->
-            //player.setMediaItems(mediaItems)
-        }
-    }
-
-     */
-
-    /**
-     * stop music
-     */
-    /*
-    private fun stopPlayer() {
-        // change button icon
-        //binding.playPauseButton.setImageResource(R.drawable.ic_play)
-
-        player.stop()
-
-        // save player state
-        viewModel.togglePlayStop()
-    }
-
-     */
-
-    /*
-    // Bound Service Methods
-    private fun bindToMusicService() {
-        with(requireActivity()) {
-            Intent(requireContext(), PlayerService::class.java).also { intent ->
-                startService(intent)
-            }
-
-            bindService(
-                Intent(requireContext(), PlayerService::class.java),
-                boundServiceConnection,
-                Context.BIND_AUTO_CREATE
-            )
-        }
-
-
-    }
-
-    private fun unbindMusicService() {
-        if (viewModel.isMusicServiceBound) {
-            // stop the audio
-            playerService?.stopMusic()
-
-            // stop the service
-            Intent(requireContext(), PlayerService::class.java).also {
-                requireActivity().stopService(it)
-            }
-
-            // disconnect the service and save state
-            requireActivity().unbindService(boundServiceConnection)
-
-            viewModel.unbindPlayerService()
-        }
-    }
-
-     */
-
 }
